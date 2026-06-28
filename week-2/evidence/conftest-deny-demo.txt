@@ -1,0 +1,6 @@
+FAIL - evidence/broken/plan.json - compliance.sc28_aws - SC-28: aws_s3_bucket.log has no encryption configuration. Add aws_s3_bucket_server_side_encryption_configuration referencing this bucket.
+FAIL - evidence/broken/plan.json - compliance.ac3_aws - AC-3: aws_s3_bucket.log has no public access block with all four flags true. Add aws_s3_bucket_public_access_block referencing this bucket with all four flags set to true.
+FAIL - evidence/broken/plan.json - compliance.cm6_aws - CM-6: aws_s3_bucket.log is missing required tag 'ComplianceScope'. Add it via provider default_tags or directly on the resource.
+FAIL - evidence/broken/plan.json - compliance.cm6_aws - CM-6: aws_s3_bucket.primary is missing required tag 'ComplianceScope'. Add it via provider default_tags or directly on the resource.
+
+4 tests, 0 passed, 0 warnings, 4 failures, 0 exceptions

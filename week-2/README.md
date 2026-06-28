@@ -33,7 +33,9 @@ week-2/
     cm6_required_tags_aws_test.rego   spec, do not edit
   evidence/
     opa-test-output.txt               unit test run
-    conftest-output.txt               policy run against the Week 1 plan
+    conftest-output.txt               policy run against the compliant Week 1 plan
+    conftest-deny-demo.txt            policy run against a deliberately broken plan
+    broken/plan.json                  intentionally non-compliant plan, the deny-demo input
   plan.json                           Week 1 plan in JSON, the conftest input
 ```
 
@@ -60,6 +62,23 @@ conftest test --policy policies --all-namespaces plan.json
 
 - `opa test`: 6 of 6 tests pass. Each policy has one test for a compliant plan, expecting no denial, and one for a non-compliant plan, expecting a denial. Captured in `evidence/opa-test-output.txt`.
 - `conftest` against the hardened Week 1 plan: 3 of 3 policies pass, captured in `evidence/conftest-output.txt`. Both the primary and log buckets carry encryption, a four-flag public access block, and the four required tags.
+
+## Demonstrating the deny path
+
+The results above show the policies passing on compliant infrastructure. To show that the gate actually blocks a violation, `evidence/broken/plan.json` is a deliberately non-compliant plan: the log bucket's encryption and public access block were removed, and one required tag (ComplianceScope) was dropped from the provider `default_tags`. This is a negative test fixture only. It is not the real Week 1 configuration, which stays compliant.
+
+Running the policies against it (`evidence/conftest-deny-demo.txt`) produces four denials across all three controls:
+
+```
+FAIL - compliance.sc28_aws - SC-28: aws_s3_bucket.log has no encryption configuration. ...
+FAIL - compliance.ac3_aws  - AC-3: aws_s3_bucket.log has no public access block with all four flags true. ...
+FAIL - compliance.cm6_aws  - CM-6: aws_s3_bucket.log is missing required tag 'ComplianceScope'. ...
+FAIL - compliance.cm6_aws  - CM-6: aws_s3_bucket.primary is missing required tag 'ComplianceScope'. ...
+
+4 tests, 0 passed, 4 failures
+```
+
+Each message names the offending resource and the fix, which is what a CI gate would surface to a developer before the change merged.
 
 ## Relationship to Week 1
 
