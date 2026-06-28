@@ -52,6 +52,17 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "primary" {
   }
 }
 
+# SC-28: encryption on the log bucket
+resource "aws_s3_bucket_server_side_encryption_configuration" "log" {
+  bucket = aws_s3_bucket.log.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # CM-6  turn on versioning
 resource "aws_s3_bucket_versioning" "primary" {
   bucket = aws_s3_bucket.primary.id
@@ -70,6 +81,16 @@ resource "aws_s3_bucket_public_access_block" "primary" {
   ignore_public_acls = true
   restrict_public_buckets = true
 }
+# AC-3: public access block on the log bucket
+resource "aws_s3_bucket_public_access_block" "log" {
+  bucket = aws_s3_bucket.log.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 
 #   AU-3  ownership controls on the log bucket
 resource "aws_s3_bucket_ownership_controls" "log" {
