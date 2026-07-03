@@ -43,3 +43,26 @@ Turn on branch protection (Settings, Branches) and require the `grc-gate` check,
 ## Stretch: generate the plan in CI with OIDC
 
 Committing `plan.json` is the simple, free, no-secrets path. The production version has CI generate the plan itself by assuming an AWS role through GitHub OIDC, so there are no stored keys. The brief explains the trust setup if you want to build it.
+
+## What got built
+
+This repo keeps each week in its own folder rather than the flat `terraform/` / `policies/` / `plan.json` layout above, so the finished workflow points at `week-2/policies` and `week-2/plan.json` directly. The workflow itself lives at `.github/workflows/grc-gate.yml` at the repo root, not under `week-3/`, since GitHub Actions only triggers workflows from the root `.github/workflows/` directory.
+
+The three TODOs became:
+
+1. **Install Conftest**, pinned to `0.68.2`. The install step downloads the release tarball and `checksums.txt` for that version and runs `sha256sum -c` before trusting the binary, rather than piping an installer script straight into a shell.
+2. **Run the policy gate** with `conftest test --policy week-2/policies --all-namespaces --output json week-2/plan.json`, piped through `tee evidence/conftest-results.json` under `set -o pipefail`. Without `pipefail`, `tee` always exits 0 and swallows Conftest's failure exit code, which would make the gate pass even on a real denial.
+3. **Upload `evidence/`** via `actions/upload-artifact@v4` with `if: always()`, so the artifact is attached whether the job passes or fails.
+
+### The two-PR demonstration, as it actually ran
+
+- **Green PR** ([#1](https://github.com/JoelF-GRC/GRC_Club_Project/pull/1)): the compliant `week-2/plan.json`. `grc-gate` passed all three namespaces (SC-28, AC-3, CM-6). Merged into `main`.
+- **Red PR** ([#2](https://github.com/JoelF-GRC/GRC_Club_Project/pull/2)): `week-2/plan.json` swapped for the `week-2/evidence/broken/plan.json` fixture (log bucket missing encryption and public access block, both buckets missing the `ComplianceScope` tag). `grc-gate` failed with four denials across all three namespaces. Closed without merging; its only purpose was demonstrating the block.
+- **Evidence PR** ([#3](https://github.com/JoelF-GRC/GRC_Club_Project/pull/3)): adds the two screenshots below. Merged into `main`.
+
+Branch protection on `main` requires the `grc-gate` check (`strict: true`, `enforce_admins: true`), which is what turned PR #2's failing check into an actual blocked merge instead of a red X someone could ignore.
+
+Screenshots, captured from the PRs above:
+
+- `evidence/pr1-green-passed.png`: PR #1, `grc-gate` passing, merge button active.
+- `evidence/pr2-red-blocked.png`: PR #2, `grc-gate` failing and marked Required, merge button disabled.
