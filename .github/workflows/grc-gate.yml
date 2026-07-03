@@ -1,0 +1,66 @@
+# grc-gate: run the policy gate on every pull request.
+# This is a skeleton. The steps marked TODO are yours to write. The brief on
+# Patreon explains what each one does and why.
+name: grc-gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  CONFTEST_VERSION: "0.68.2"
+
+jobs:
+  grc-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install Conftest at a pinned version (do not use latest).
+      # Downloads the release tarball, verifies it against the published
+      # checksums.txt for that version, then installs the binary on PATH.
+      - name: Install Conftest
+        run: |
+          set -euo pipefail
+          asset="conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          curl -sSL -O \
+            "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/${asset}"
+          curl -sSL -o checksums.txt \
+            "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/checksums.txt"
+          grep "${asset}" checksums.txt | sha256sum -c -
+          tar xzf "${asset}" conftest
+          sudo mv conftest /usr/local/bin/conftest
+          conftest --version
+
+      # Run the three policy namespaces against the committed plan.json.
+      # Write the results to evidence/conftest-results.json.
+      # `set -o pipefail` is required here: `tee` always exits 0, so without
+      # it a policy failure would be swallowed by the pipe and the job would
+      # go green even on a denial.
+      - name: Run policy gate
+        run: |
+          set -o pipefail
+          mkdir -p evidence
+          conftest test \
+            --policy week-2/policies \
+            --all-namespaces \
+            --output json \
+            week-2/plan.json | tee evidence/conftest-results.json
+
+      # Upload evidence/ as a build artifact, with `if: always()` so the
+      # evidence is saved even when the gate fails. That is the point of
+      # CI evidence: it survives the failure.
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grc-evidence
+          path: evidence/
+
+      # STRETCH: instead of a committed plan.json, assume an AWS role via
+      #          OIDC (no stored keys) and generate the plan in CI. See the brief.
