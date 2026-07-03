@@ -10,8 +10,9 @@ This is an ongoing series, worked week by week. New weeks are added here as each
 |------|-------|-------------|--------------------------|----------|
 | 1 | S3 bucket hardening (encryption, versioning, public access block, access logging) | SC-28, CM-6, AC-3, AU-3 | A.8.24 (Use of cryptography), A.8.13 (Information backup), A.8.3 (Information access restriction), A.8.15 (Logging) | [week-1](week-1/) |
 | 2 | Policy as code: OPA/Rego policies that enforce the Week 1 controls against the Terraform plan, with unit tests and a conftest gate | SC-28, AC-3, CM-6 | A.8.24 (Use of cryptography), A.8.3 (Information access restriction), A.8.9 (Configuration management) | [week-2](week-2/) |
+| 3 | CI gate: a GitHub Actions workflow that runs the Week 2 conftest policies on every pull request, uploads evidence on every run, and is enforced by branch protection so a control violation blocks the merge | SC-28, AC-3, CM-6 | A.8.24 (Use of cryptography), A.8.3 (Information access restriction), A.8.9 (Configuration management) | [week-3](week-3/) |
 
-Week 3 onward will be added as the club publishes each lab.
+Week 4 onward will be added as the club publishes each lab.
 
 ## Structure
 
