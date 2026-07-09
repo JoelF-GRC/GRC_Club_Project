@@ -11,9 +11,11 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  id-token: write   # required so Cosign can request a keyless signing certificate via OIDC
 
 env:
   CONFTEST_VERSION: "0.68.2"
+  COSIGN_VERSION: "3.1.1"
 
 jobs:
   grc-gate:
@@ -36,6 +38,21 @@ jobs:
           tar xzf "${asset}" conftest
           sudo mv conftest /usr/local/bin/conftest
           conftest --version
+
+      # Install Cosign at a pinned version (do not use latest), same
+      # download-then-verify-checksum approach as Conftest above.
+      - name: Install Cosign
+        run: |
+          set -euo pipefail
+          asset="cosign-linux-amd64"
+          curl -sSL -o "${asset}" \
+            "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/${asset}"
+          curl -sSL -o cosign_checksums.txt \
+            "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt"
+          grep " ${asset}\$" cosign_checksums.txt | sha256sum -c -
+          chmod +x "${asset}"
+          sudo mv "${asset}" /usr/local/bin/cosign
+          cosign version
 
       # Run the three policy namespaces against the committed plan.json.
       # Write the results to evidence/conftest-results.json.
@@ -61,6 +78,37 @@ jobs:
         with:
           name: grc-evidence
           path: evidence/
+
+      # Bundle evidence/ into one file, hash it, and sign it keyless with
+      # Cosign. `if: always()` so a bundle still gets signed and preserved
+      # even when the policy gate failed; the evidence of a violation is
+      # exactly the thing that needs a tamper-proof chain of custody.
+      #
+      # Keyless: Cosign exchanges this job's GitHub OIDC token for a
+      # short-lived signing certificate from Sigstore's public CA, signs
+      # with it, then discards the key. Nothing durable to store or leak.
+      # `--bundle` packs the signature, certificate, and Rekor
+      # transparency-log entry into one file for the verifier to check.
+      - name: Sign evidence bundle
+        if: always()
+        run: |
+          set -euo pipefail
+          tar czf evidence.tar.gz evidence/
+          sha256sum evidence.tar.gz > evidence.tar.gz.sha256
+          cosign sign-blob --yes --bundle evidence.sig.bundle evidence.tar.gz
+
+      # Upload the signed bundle, its hash, and the signature bundle as a
+      # separate artifact so verify-evidence.sh can be run against exactly
+      # what was signed, independent of the raw evidence/ artifact above.
+      - name: Upload signed evidence bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grc-evidence-signed
+          path: |
+            evidence.tar.gz
+            evidence.tar.gz.sha256
+            evidence.sig.bundle
 
       # STRETCH: instead of a committed plan.json, assume an AWS role via
       #          OIDC (no stored keys) and generate the plan in CI. See the brief.
