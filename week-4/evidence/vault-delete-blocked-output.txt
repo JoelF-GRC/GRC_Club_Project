@@ -1,0 +1,5 @@
+=== unqualified delete on a versioned bucket only adds a delete marker, it does not touch the locked version ===
+
+=== attempting to delete the actual protected version (id: 4Vr6n9uol._PcmFzF2TXe2p6I_9WBauL) without bypass ===
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the DeleteObject operation: Access Denied because object protected by object lock.
