@@ -1,8 +1,8 @@
 # GRC Club Project
 
-Hands-on labs and demos from [GRC Engineering Club](https://grcengclub.com/), a community for GRC professionals who want to build the technical skills to implement and enforce controls in code, not just write about them. Each week implements a control or set of controls in code, with evidence collected on the way to a passing state. Controls are tracked against NIST and mapped to ISO/IEC 27001:2022 Annex A for cross-framework reference.
+Hands-on labs and demos from [GRC Engineering Club](https://grcengclub.com/), a community of GRC professionals who want to build the technical skills to implement and enforce controls in code, moving past written policies. Each week, the GRC Club releases assignments that challenge you to implement a control or set of controls in code, with evidence collected on the way to a passing state. Controls are tracked against NIST, and I have further mapped to ISO/IEC 27001:2022 Annex A for cross-framework reference.
 
-This is an ongoing series, worked week by week. New weeks are added here as each lab is released, so the set grows over time rather than landing all at once.
+This is an ongoing series, worked week by week. New weeks are added here as each lab is released, so the set grows over time rather than a single commit or pull request (PR).
 
 ## Weeks
 
