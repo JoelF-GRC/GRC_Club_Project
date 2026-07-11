@@ -1,5 +1,6 @@
 # Week 3 starter: Build the Gate
 
+(Instructions from GRC Engineering Club)
 A skeleton GitHub Actions workflow. You write the steps. The goal is a gate that runs your week 2 policies on every pull request and blocks the ones that break a control.
 
 ## Repo layout this assumes
@@ -66,3 +67,9 @@ Screenshots, captured from the PRs above:
 
 - `evidence/pr1-green-passed.png`: PR #1, `grc-gate` passing, merge button active.
 - `evidence/pr2-red-blocked.png`: PR #2, `grc-gate` failing and marked Required, merge button disabled.
+
+## Relationship to Week 2
+
+Week 2 proved the three policies work: run by hand with `opa test`, and again with `conftest` against a real and a deliberately broken plan. Week 3 takes that same manual check and wires it into the one place a violation actually has to be caught, the pull request, so compliance no longer depends on someone remembering to run conftest before merging.
+
+Building the gate surfaced a gap in the gate itself. The first version piped `conftest test` through `tee` to save the evidence file, but without `set -o pipefail` the job's exit code was `tee`'s, which is always 0, so a real policy failure would have merged silently. That's the same class of problem Week 2's policies exist to catch, a control that looks like it's enforcing something but isn't, just one layer up in the pipeline instead of in the Terraform. Fixing it before the red-PR demonstration is what makes PR #2's block real rather than assumed.

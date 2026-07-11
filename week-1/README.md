@@ -1,5 +1,6 @@
 # Week 1 starter: Your First Compliant Resource
 
+(Instructions from GRC Engineering Club)
 This is scaffolding, not a solution. The provider and both buckets are wired up so the project validates out of the box. Your job is to add the five controls marked `# TODO` in `main.tf`.
 
 ## Use it
